@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+</head>
+<body>
+    <main x-data="employees()" x-init="init()">
+        <div class="left-side">
+            <h1>Employees</h1>
+            <section>
+                <h2>List of Employee</h2>
+                <ul>
+                    <template x-for="employee in employees" :key="employee.id">
+                        <li>
+                            <strong x-text="employee.firstName + ' ' + employee.lastName"></strong>
+                            <button>VIEW</button>
+                            <button>EDIT</button>
+                            <button>DELETE</button>
+                        </li>
+                    </template>
+                </ul>
+            </section>
+            
+            <section class="search-employees">
+                <input type="text" placeholder="Enter first name" /><button>Search and View Employees</button>
+            </section>
+
+            <section class="add-employee">
+                <h2>Add Employee</h2>
+                <div>
+                    <input type="text" placeholder="First name" />
+                    <input type="text" placeholder="Last name" />
+                    <input type="number" placeholder="age" />
+                    Married?
+                    <input type="checkbox" />
+                </div>
+                <button>Add Employee</button>
+            </section>
+            
+            <section>
+                <h2>Edit Employee</h2>
+                <div>
+                    <input type="text" placeholder="First name" />
+                    <input type="text" placeholder="Last name" />
+                    <input type="number" placeholder="age" />
+                    Married?
+                    <input type="checkbox" />
+                </div>
+                <button>Edit Employee</button>
+            </section>
+        </div>
+        <div class="right-side">
+            <h2>View Employee/s Info</h2>
+            <div class="view-area">
+                First name: <span>John</span><br>
+                Last name: <span>Smith</span><br>
+                Age: <span>40</span><br>
+                Married: <span>Yes</span>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function employees() {
+            return {
+                employees: [],
+                isLoading: false,
+                init() {
+                    this.isLoading = true;
+
+                    fetch('http://localhost:3500/employees')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.employees = data;
+                        this.isLoading = false;
+                    })
+                    .catch(error => {
+                        console.error('發生錯誤：', error);
+                        this.isLoading = false;
+                    });
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        main {
+            display: flex;
+            width: 100%;
+        }
+
+        main .left-side {
+            width: 50%;
+            padding: 2rem;
+        }
+
+        main .right-side {
+            width: 50%;
+            padding: 2rem;
+        }
+
+        .view-area {
+            background-color: gainsboro;
+            padding: 1rem;
+        }
+    </style>
+</body>
+</html>
