@@ -7,22 +7,22 @@ const employeeRouter = Router();
 const employees: Employee[] = [
     {
         id: 'yuwrohewoq7cysahouighr',
-        firstName: 'John',
-        lastName: 'Smith',
+        firstname: 'John',
+        lastname: 'Smith',
         age: 40,
         isMarried: false
     },
     {
         id: '0f89r32hpiglp8dgasuh',
-        firstName: 'Jane',
-        lastName: 'Doe',
+        firstname: 'Jane',
+        lastname: 'Doe',
         age: 30,
         isMarried: true
     },
     {
         id: 'dlwhfobrpwguhedsf',
-        firstName: 'Joe',
-        lastName: 'Moe',
+        firstname: 'Joe',
+        lastname: 'Moe',
         age: 10,
         isMarried: false
     }
@@ -30,6 +30,19 @@ const employees: Employee[] = [
 
 employeeRouter.get('/', (request: Request, response: Response) => {
     response.status(200).json(employees);
+});
+
+employeeRouter.get('/search', (request: Request<{}, {firstname: string}>, response: Response)=> {
+    const targetFirstname = request.query.firstname
+    if (! targetFirstname) {
+        response.status(200).json(employees)
+
+        return;
+    }
+
+    const result = employees.filter(employee => employee.firstname === targetFirstname)
+
+    response.status(200).json(result)
 });
 
 employeeRouter.get('/:id', (request: Request<{id: string}>, response: Response) => {
@@ -48,8 +61,8 @@ employeeRouter.get('/:id', (request: Request<{id: string}>, response: Response) 
 employeeRouter.post('/', (request: Request<{}, {}, Omit<Employee, 'id'>>, response: Response) => {
     const newEmployee: Employee = {
         id: uuidv4(),
-        firstName: request.body.firstName,
-        lastName: request.body.lastName,
+        firstname: request.body.firstname,
+        lastname: request.body.lastname,
         age: request.body.age,
         isMarried: request.body.isMarried
     }
@@ -71,8 +84,8 @@ employeeRouter.put('/:id', (request: Request<{id:string}, {}, Partial<Employee>>
 
     const updatedEmployee: Employee = {
         ...employees[foundIndex],
-        firstName: request.body.firstName ?? employees[foundIndex].firstName,
-        lastName: request.body.lastName ?? employees[foundIndex].lastName,
+        firstname: request.body.firstname ?? employees[foundIndex].firstname,
+        lastname: request.body.lastname ?? employees[foundIndex].lastname,
         age: request.body.age ?? employees[foundIndex].age,
         isMarried: request.body.isMarried ?? employees[foundIndex].isMarried,
     }

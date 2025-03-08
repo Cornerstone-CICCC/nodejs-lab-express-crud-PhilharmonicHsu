@@ -15,50 +15,51 @@
                 <ul>
                     <template x-for="employee in employees" :key="employee.id">
                         <li>
-                            <strong x-text="employee.firstName + ' ' + employee.lastName"></strong>
-                            <button>VIEW</button>
-                            <button>EDIT</button>
-                            <button>DELETE</button>
+                            <strong x-text="employee.firstname + ' ' + employee.lastname"></strong>
+                            <button @click="handleClickView(employee)">VIEW</button>
+                            <button @click="handleClickEdit(employee)">EDIT</button>
+                            <button @click="deleteEmployee(employee.id)">DELETE</button>
                         </li>
                     </template>
                 </ul>
             </section>
             
             <section class="search-employees">
-                <input type="text" placeholder="Enter first name" /><button>Search and View Employees</button>
+                <input type="text" x-model="searchText" placeholder="Enter first name" /><button @click="handleClickSearch()">Search and View Employees</button>
             </section>
 
             <section class="add-employee">
                 <h2>Add Employee</h2>
                 <div>
-                    <input type="text" placeholder="First name" />
-                    <input type="text" placeholder="Last name" />
-                    <input type="number" placeholder="age" />
-                    Married?
-                    <input type="checkbox" />
+                    <input type="text" placeholder="First name" x-model="insertData.firstname" />
+                    <input type="text" placeholder="Last name" x-model="insertData.lastname"/>
+                    <input type="number" placeholder="age" x-model="insertData.age" />
+                    Married? <input type="checkbox" x-model="insertData.isMarried" />
                 </div>
-                <button>Add Employee</button>
+                <button @click="insertEmployee()">Add Employee</button>
             </section>
             
             <section>
                 <h2>Edit Employee</h2>
                 <div>
-                    <input type="text" placeholder="First name" />
-                    <input type="text" placeholder="Last name" />
-                    <input type="number" placeholder="age" />
+                    <input type="text" placeholder="First name" x-model="editData.firstname"/>
+                    <input type="text" placeholder="Last name" x-model="editData.lastname"/>
+                    <input type="number" placeholder="age" x-model="editData.age" />
                     Married?
-                    <input type="checkbox" />
+                    <input type="checkbox" x-model="editData.isMarried" />
                 </div>
-                <button>Edit Employee</button>
+                <button @click="updateEmployee()">Edit Employee</button>
             </section>
         </div>
         <div class="right-side">
             <h2>View Employee/s Info</h2>
             <div class="view-area">
-                First name: <span>John</span><br>
-                Last name: <span>Smith</span><br>
-                Age: <span>40</span><br>
-                Married: <span>Yes</span>
+                First name: <span x-text="viewData.firstname"></span><br>
+                Last name: <span x-text="viewData.lastname">Smith</span><br>
+                Age: <span x-text="viewData.age">40</span><br>
+                Married: 
+                    <template x-if="viewData.isMarried"><span>Yes</span></template> 
+                    <template x-if="! viewData.isMarried"><span>No</span></template> 
             </div>
         </div>
     </main>
@@ -68,20 +69,125 @@
             return {
                 employees: [],
                 isLoading: false,
-                init() {
+                searchText: '',
+                viewData: {
+                    firstname: '-',
+                    lastname: '-',
+                    age: '-',
+                    isMarried: false
+                },
+                editData: {
+                    id: '',
+                    firstname: null,
+                    lastname: null,
+                    age: null,
+                    isMarried: false  
+                },
+                insertData: {
+                    firstname: null,
+                    lastname: null,
+                    age: null,
+                    isMarried: false  
+                },
+                async init() {
                     this.isLoading = true;
 
-                    fetch('http://localhost:3500/employees')
-                    .then(response => response.json())
-                    .then(data => {
-                        this.employees = data;
+                    try {
+                        const response = await fetch('http://localhost:3500/employees');
+                        this.employees = await response.json();
+                    } catch (error) {
+                        console.error('Failed:', error);                        
+                    } finally {
                         this.isLoading = false;
-                    })
-                    .catch(error => {
-                        console.error('發生錯誤：', error);
+                    }
+                },
+                handleClickView(employee) {
+                    this.viewData = {...employee}
+                },
+                handleClickEdit(employee) {
+                    this.editData = {...employee}
+                },
+                async deleteEmployee(employeeId) {
+                    this.isLoading = true;
+
+                    try {
+                        const response = await fetch(`http://localhost:3500/employees/${employeeId}`, {
+                            method: 'DELETE'
+                        })
+
+                        this.handleClickSearch(true);
+                    } catch (error) {
+                        console.error('Failed:', error);  
+                    } finally {
                         this.isLoading = false;
-                    });
-                }
+                    }
+                },
+                async handleClickSearch(isTigger = false) {
+                    this.isLoading = true;
+
+                    try {
+                        const url = (isTigger) 
+                        ? 'http://localhost:3500/employees/search'
+                        : `http://localhost:3500/employees/search?firstname=${this.searchText}`
+
+                        const response = await fetch(url);
+                        this.employees = await response.json();
+                    } catch (error) {
+                        console.error('Failed:', error);   
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                async insertEmployee() {
+                    this.isLoading = true;
+
+                    try {
+                        await fetch('http://localhost:3500/employees', {
+                            method: 'POST',
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(this.insertData),
+                        });
+
+                        this.handleClickSearch(true);
+                        this.insertData = {
+                            firstname: null,
+                            lastname: null,
+                            age: null,
+                            isMarried: false  
+                        };
+                    } catch (error) {
+                        console.error('Failed:', error);                        
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                async updateEmployee() {
+                    this.isLoading = true;
+                    try {
+                        await fetch(`http://localhost:3500/employees/${this.editData.id}`, {
+                            method: 'PUT',
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(this.editData),
+                        })
+
+                        this.handleClickSearch(true);
+                        this.editData = {
+                            id: '',
+                            firstname: null,
+                            lastname: null,
+                            age: null,
+                            isMarried: false  
+                        };
+                    } catch (error) {
+                        console.error('Failed:', error);                        
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
             }
         }
     </script>
